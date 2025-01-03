@@ -90,7 +90,7 @@
   (evil-set-initial-state 'dashboard-mode 'normal))
 
 (use-package evil-collection
-  ;; :after (evil magit)
+  :after evil
   :config
   (evil-collection-init))
 
