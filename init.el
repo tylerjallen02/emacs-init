@@ -1,4 +1,4 @@
-(setq gc-cons-threshold (* 50 1000 1000))
+(setq gc-cons-threshold (* 100 1000 1000))
 
 (defun efs/display-startup-time ()
   (message "Emacs loaded in %s with %d garbage collections."
@@ -12,7 +12,7 @@
 (require 'package)
 
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
+                         ;; ("org" . "https://orgmode.org/elpa/")
                          ("elpa" . "https://elpa.gnu.org/packages/")))
 
 (package-initialize)
@@ -168,6 +168,8 @@
 (tyler/leader-keys
   "ts" '(hydra-text-scale/body :which-key "scale text"))
 
+
+
 (defun efs/org-font-setup ()
    (set-face-attribute 'org-hide nil :inherit 'fixed-pitch) ;fix alignment of bullets
    ;; Replace list hyphen with dot
@@ -201,14 +203,17 @@
 
 (use-package org
   :hook (org-mode . efs/org-mode-setup)
+  :init
+  (setq org-startup-with-latex-preview t)
   :commands (org-capture org-agenda)
   :config
-  (setq org-ellipsis " ▾")
+  (setq org-ellipsis " ▾"
+        org-hide-emphasis-markers t)
 
   (setq org-agenda-start-with-log-mode t)
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
-
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.2))
   (setq org-agenda-files
         '("~/.emacs.d/OrgFiles/Tasks.org"))
   (efs/org-font-setup)
@@ -252,6 +257,9 @@
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
+(use-package org-fragtog
+  :hook (org-mode . org-fragtog-mode))
+
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
@@ -260,35 +268,47 @@
   (lsp-headerline-breadcrumb-mode))
 
 (use-package lsp-mode
-    :commands (lsp lsp-deferred)
-    :hook (lsp-mode . efs/lsp-mode-setup)
-    :init
-    (setq lsp-keymap-prefix "C-l")
-    :config
-    (lsp-enable-which-key-integration t))
+  :commands (lsp lsp-deferred)
+  :hook (lsp-mode . efs/lsp-mode-setup)
+  :init
+  (setq lsp-keymap-prefix "C-l")
+  :config
+  (lsp-enable-which-key-integration t)
+  (setq lsp-semantic-tokens-enable t))
+
+;; (use-package flycheck
+;;   :after lsp-mode 
+;;   :init ())
 
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
   :custom
   (lsp-ui-doc-position 'bottom))
-
 (use-package lsp-treemacs
   :after lsp)
 
 (use-package lsp-ivy
   :after lsp)
 
-(defun clojure-mode-setup ()
-  )
-(use-package paredit)
 (use-package clojure-mode
   :mode "\\.clj\\'"
-  :hook
-  (clojure-mode . lsp-deferred)
-  :init
-  (enable-paredit-mode))
+  :hook (clojure-mode . lsp-deferred))
+
+(use-package paredit
+  :after clojure-mode
+  :hook (clojure-mode . enable-paredit-mode))
+
 (use-package cider
+  :after clojure-mode
   :commands cider-jack-in)
+
+(use-package tex
+  :hook (LaTeX-mode . lsp-deferred)
+  :ensure auctex)
+;; (use-package auctex
+  ;; :mode "\\.tex\\"
+  ;; :hook (LaTeX-mode . lsp-deferred))
+;; (use-package calc)
 
 (use-package company
   :after lsp-mode
