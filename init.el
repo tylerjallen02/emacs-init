@@ -12,7 +12,7 @@
 (require 'package)
 
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ;; ("org" . "https://orgmode.org/elpa/")
+                         ("org" . "https://orgmode.org/elpa/")
                          ("elpa" . "https://elpa.gnu.org/packages/")))
 
 (package-initialize)
@@ -305,6 +305,9 @@
 (use-package tex
   :hook (LaTeX-mode . lsp-deferred)
   :ensure auctex)
+(use-package lsp-latex
+  :init
+  (setq lsp-latex-chktex-on-edit t))
 ;; (use-package auctex
   ;; :mode "\\.tex\\"
   ;; :hook (LaTeX-mode . lsp-deferred))
@@ -345,8 +348,6 @@
 ;; NOTE: Make sure to configure a GitHub token before using this package!
 ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
 ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
-(use-package forge
-  :after magit)
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
