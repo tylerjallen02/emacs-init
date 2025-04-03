@@ -1,15 +1,8 @@
 (setq gc-cons-threshold (* 100 1000 1000))
 
-(defun efs/display-startup-time ()
-  (message "Emacs loaded in %s with %d garbage collections."
-           (format "%.2f seconds"
-                   (float-time
-                    (time-subtract after-init-time before-init-time)))
-           gcs-done))
-
-(add-hook 'emacs-startup-hook #'efs/display-startup-time)
-
 (require 'package)
+
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/babel"))
 
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
@@ -40,6 +33,7 @@
 
 (dolist (mode '(org-mode-hook
                 term-mode-hook
+                vterm-mode-hook
                 treemacs-mode-hook
                 shell-mode-hook
                 eshell-mode-hook
@@ -50,10 +44,10 @@
   :config
   (good-scroll-mode 1))
 
-(defvar tyler/default-font-size 100)
-(set-face-attribute 'default nil :font "DejaVuSansMono" :height 100)
-(set-face-attribute 'fixed-pitch nil :font "DejaVuSansMono" :height 100)
-(set-face-attribute 'variable-pitch nil :font "DejaVuSans" :height 105 :weight 'regular)
+(defvar tyler/default-font-size 120)
+(set-face-attribute 'default nil :font "DejaVuSansMono" :height 108)
+(set-face-attribute 'fixed-pitch nil :font "DejaVuSansMono" :height 108)
+(set-face-attribute 'variable-pitch nil :font "DejaVuSans" :height 108 :weight 'regular)
 
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 (use-package general
@@ -67,7 +61,12 @@
   (tyler/leader-keys
     "t"  '(:ignore t :which-key "toggles")
     "tt" '(counsel-load-theme :which-key "choose theme")
-    "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
+    "f" '(:ignore f :which-key "file")
+    "fe" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))
+    "ff" 'find-file
+    "i" '(:ignore i :which-key "insert")
+    "ic" 'insert-char
+    "v" 'vterm))
 
 
 (use-package evil
@@ -95,10 +94,16 @@
   (evil-collection-init))
 
 (use-package doom-themes
-  :init (load-theme 'doom-material-dark t))
+ :config
+ (load-theme 'doom-lantern t))
+(use-package jetbrains-darcula-theme)
+  ;; :config
+  ;; (load-theme 'jetbrains-darcula))
 
 (use-package doom-modeline
-  :init (doom-modeline-mode 1)
+  :ensure t
+  :init (setq doom-modeline-mode 1)
+  :hook (window-setup . doom-modeline-mode)
   :custom ((doom-modeline-height 15)))
 
 (use-package which-key
@@ -213,7 +218,7 @@
   (setq org-agenda-start-with-log-mode t)
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.2))
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 0.9))
   (setq org-agenda-files
         '("~/.emacs.d/OrgFiles/Tasks.org"))
   (efs/org-font-setup)
@@ -234,20 +239,22 @@
 (use-package visual-fill-column
   :hook (org-mode . efs/org-mode-visual-fill))
 
-(with-eval-after-load 'org
-
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (python . t))))
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (python . t)
+   (kotlin . t)))
 
 (setq org-confirm-babel-evaluate nil)
-(setq org-babel-python-command "python3") 
+(setq org-babel-python-command "python3")
 
 (with-eval-after-load 'org
   (require 'org-tempo)
 
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp")))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+  (add-to-list 'org-structure-template-alist '("ko" . "src kotlin"))
+  (add-to-list 'org-structure-template-alist '("js" . "src javascript")))
 
 (defun efs/org-babel-tangle-config()
   (when (string-equal (buffer-file-name)
@@ -303,42 +310,80 @@
   :commands cider-jack-in)
 
 (use-package tex
-  :hook (LaTeX-mode . lsp-deferred)
+  :hook
+  (LaTeX-mode . lsp-deferred)
+  (LaTeX-mode . xenops-mode)
   :ensure auctex)
 (use-package lsp-latex
+  :after tex
   :init
   (setq lsp-latex-chktex-on-edit t))
-;; (use-package auctex
-  ;; :mode "\\.tex\\"
-  ;; :hook (LaTeX-mode . lsp-deferred))
-;; (use-package calc)
+
+(use-package xenops
+  :after tex
+  :init (setq xenops-reveal-on-entry t))
+
+(use-package lsp-haskell
+  :after haskell-mode)
+(use-package haskell-mode
+  :mode "\\.hs\\'"
+  :hook (haskell-mode . lsp-deferred))
+
+(use-package python-mode
+  :ensure t
+  :hook (python-mode . lsp-deferred))
+
+(use-package lsp-pyright
+  :after python-mode)
+
+(use-package pyvenv
+  :ensure t
+  :defer t
+  :diminish
+  :config
+  
+  (setenv "WORKON_HOME" "~/pyenv/")
+					; Show python venv name in modeline
+  (setq pyvenv-mode-line-indicator '(pyvenv-virtual-env-name ("[venv:" pyvenv-virtual-env-name "] ")))
+  (pyvenv-mode t))
+
+(use-package js
+  :hook (js-mode . lsp-deferred))
 
 (use-package company
-  :after lsp-mode
+  ;; :config (add-to-list 'company-backends 'company-yasnippet)
+  ;; :after lsp-mode
+  :config (yas-global-mode 1)
   :hook (lsp-mode . company-mode)
+  
   :bind
-  (:map company-active-map
-        ("<tab>" . company-complete-selection))
-  (:map lsp-mode-map
-        ("<tab>" . company-indent-or-complete-common))
+  ;; (:map company-active-map
+  ;;       ("<tab>" . company-complete-selection))
+  ;; ;; (:map lsp-mode-map
+  ;;       ("<tab>" . company-indent-or-complete-common))
   :custom
-  (company-minimum-prefix-length 2)
-  (company-idle-delay 0.0))
+  (company-minimum-prefix-length 3)
+  (company-idle-delay 0.5))
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
 (use-package projectile
-  :diminish projectile-mode
-  :config (projectile-mode)
-  :custom((projectile-completion-system 'ivy))
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  (setq projectile-swtch-project-action #'projectile-dired)) 
-(use-package counsel-projectile
-  :after projectile 
-  :config (counsel-projectile-mode))
+   :diminish projectile-mode
+   :config (projectile-mode)
+   :custom((projectile-completion-system 'ivy))
+   :bind-keymap
+   ("C-c p" . projectile-command-map)
+   :init
+   (setq projectile-swtch-project-action #'projectile-dired)) 
+ (use-package counsel-projectile
+   :after projectile 
+   :config (counsel-projectile-mode))
+
+(tyler/leader-keys
+  "p" '(:ignore p :which-key "projectile")
+  "pf" 'projectile-find-file
+  "pk" 'projectile-kill-buffers)
 
 (use-package magit
   :commands magit-status
@@ -353,12 +398,12 @@
   :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package term
-  :commands term
-  :config (setq explicit-shell-file-name "bash")
-  (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *"))
+   :commands term
+   :config (setq explicit-shell-file-name "bash")
+   (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *"))
 
-(use-package eterm-256color
-  :hook (term-mode . eterm-256-color-mode))
+ (use-package eterm-256color
+   :hook (term-mode . eterm-256color-mode))
 
 (use-package vterm
   :commands vterm
@@ -386,7 +431,7 @@
   (with-eval-after-load 'esh-opt
     (setq eshell-destroy-buffer-when-process-dies t)
     (setq eshell-visual-commands '("htop" "zsh" "vim")))
-
+  
   (eshell-git-prompt-use-theme 'powerline))
 
 (use-package dired
@@ -396,6 +441,7 @@
   :custom ((dired-listing-switches "-agho --group-directories-first"))
   :config
   (setq dired-kill-when-opening-new-dired-buffer t) ;Only keep one dired open, keep buffers from getting cluttered.
+  (setq delete-by-moving-to-trash t)
   (evil-collection-define-key 'normal 'dired-mode-map
     "h" 'dired-up-directory
     "l" 'dired-find-file))
@@ -418,6 +464,12 @@
   (evil-collection-define-key 'normal 'dired-mode-map
     "H" 'dired-hide-dotfiles-mode))
 
-(setq gc-cons-threshold (* 2 1000 1000))
+(setq gc-cons-threshold (* 4 1000 1000))
+
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (setq exec-path-from-shell-variables '("OPENAI_API_KEY"))
+  (exec-path-from-shell-initialize))
 
 (setq backup-directory-alist `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
