@@ -1,4 +1,3 @@
-;; -*- lexical-binding: t; -*-
 (setq gc-cons-threshold (* 100 1000 1000))
 
 (require 'package)
@@ -67,7 +66,8 @@
     "ff" 'find-file
     "i" '(:ignore i :which-key "insert")
     "ic" 'insert-char
-    "v" 'vterm))
+    "v" 'vterm 
+    "c" 'org-capture))
 
 
 (use-package evil
@@ -267,6 +267,10 @@
 
 (use-package org-fragtog
   :hook (org-mode . org-fragtog-mode))
+
+(setq org-capture-templates
+      '(("j" "Journal" plain (file+datetree "~/journal.org")
+	 "%?")))
 
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
