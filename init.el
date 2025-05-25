@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (setq gc-cons-threshold (* 100 1000 1000))
 
 (require 'package)
@@ -348,7 +349,8 @@
   (pyvenv-mode t))
 
 (use-package js
-  :hook (js-mode . lsp-deferred))
+  :hook (js-mode . lsp-deferred)
+  (js-mode . smartparens-mode))
 
 (use-package company
   ;; :config (add-to-list 'company-backends 'company-yasnippet)
@@ -357,13 +359,13 @@
   :hook (lsp-mode . company-mode)
   
   :bind
-  ;; (:map company-active-map
-  ;;       ("<tab>" . company-complete-selection))
-  ;; ;; (:map lsp-mode-map
-  ;;       ("<tab>" . company-indent-or-complete-common))
+  (:map company-active-map
+        ("<tab>" . company-complete-selection))
+  (:map lsp-mode-map
+        ("<tab>" . company-indent-or-complete-common))
   :custom
   (company-minimum-prefix-length 3)
-  (company-idle-delay 0.5))
+  (company-idle-delay 0.25))
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
