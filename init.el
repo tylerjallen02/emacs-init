@@ -49,50 +49,7 @@
 (set-face-attribute 'fixed-pitch nil :font "DejaVuSansMono" :height 108)
 (set-face-attribute 'variable-pitch nil :font "DejaVuSans" :height 108 :weight 'regular)
 
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-(use-package general
-  :after evil
-  :config
-  (general-create-definer tyler/leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC")
 
-  (tyler/leader-keys
-    "t"  '(:ignore t :which-key "toggles")
-    "tt" '(counsel-load-theme :which-key "choose theme")
-    "f" '(:ignore f :which-key "file")
-    "fe" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))
-    "ff" 'find-file
-    "i" '(:ignore i :which-key "insert")
-    "ic" 'insert-char
-    "v" 'vterm 
-    "c" 'org-capture))
-
-
-(use-package evil
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
-  (setq evil-want-C-i-jump nil)
-  :config
-  (unless evil-mode ;fix issue where it doesn't like initializing this when already using evil mode
-    (evil-mode 1))
-  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-
-  ;; Use visual ine motions even outside of visual-line-mode buffers
-  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-
-  (evil-set-initial-state 'messages-buffer-mode 'normal)
-  (evil-set-initial-state 'dashboard-mode 'normal))
-
-(use-package evil-collection
-  :after evil
-  :config
-  (evil-collection-init))
 
 (use-package doom-themes
  :config
@@ -116,19 +73,7 @@
 
 (use-package ivy
   :diminish
-  :bind (("C-s" . swiper)
-         :map ivy-minibuffer-map
-         ("TAB" . ivy-alt-done)
-         ("C-l" . ivy-alt-done)
-         ("C-j" . ivy-next-line)
-         ("C-k" . ivy-previous-line)
-         :map ivy-switch-buffer-map
-         ("C-k" . ivy-previous-line)
-         ("C-l" . ivy-done)
-         ("C-d" . ivy-switch-buffer-kill)
-         :map ivy-reverse-i-search-map
-         ("C-k" . ivy-previous-line)
-         ("C-d" . ivy-reverse-i-search-kill))
+  :bind (("C-s" . swiper))
   :config
   (ivy-mode 1))
 
@@ -138,9 +83,6 @@
   (ivy-rich-mode 1))
 
 (use-package counsel
-  :bind (("C-M-j" . 'counsel-switch-buffer)
-         :map minibuffer-local-map
-         ("C-r" . 'counsel-minibuffer-history))
   :config
   (counsel-mode 1))
 
@@ -162,17 +104,7 @@
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 
-(use-package hydra
-  :defer t)
 
-(defhydra hydra-text-scale (:timeout 4)
-  "scale text"
-  ("j" text-scale-increase "in")
-  ("k" text-scale-decrease "out")
-  ("f" nil "finished" :exit t))
-
-(tyler/leader-keys
-  "ts" '(hydra-text-scale/body :which-key "scale text"))
 
 
 
@@ -362,11 +294,6 @@
   :config (yas-global-mode 1)
   :hook (lsp-mode . company-mode)
   
-  :bind
-  (:map company-active-map
-        ("<tab>" . company-complete-selection))
-  (:map lsp-mode-map
-        ("<tab>" . company-indent-or-complete-common))
   :custom
   (company-minimum-prefix-length 3)
   (company-idle-delay 0.25))
@@ -375,21 +302,14 @@
   :hook (company-mode . company-box-mode))
 
 (use-package projectile
-   :diminish projectile-mode
-   :config (projectile-mode)
-   :custom((projectile-completion-system 'ivy))
-   :bind-keymap
-   ("C-c p" . projectile-command-map)
-   :init
-   (setq projectile-swtch-project-action #'projectile-dired)) 
- (use-package counsel-projectile
-   :after projectile 
-   :config (counsel-projectile-mode))
-
-(tyler/leader-keys
-  "p" '(:ignore p :which-key "projectile")
-  "pf" 'projectile-find-file
-  "pk" 'projectile-kill-buffers)
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom((projectile-completion-system 'ivy))
+  :init
+  (setq projectile-swtch-project-action #'projectile-dired)) 
+(use-package counsel-projectile
+  :after projectile 
+  :config (counsel-projectile-mode))
 
 (use-package magit
   :commands magit-status
@@ -402,6 +322,8 @@
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
+
+
 
 (use-package term
    :commands term
@@ -419,10 +341,6 @@
 (defun efs/configure-eshell ()
   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
   (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-  (evil-normalize-keymaps)
 
   (setq eshell-history-size 10000
         eshell-buffer-maximum-lines 10000
@@ -447,11 +365,7 @@
   :custom ((dired-listing-switches "-agho --group-directories-first"))
   :config
   (setq dired-kill-when-opening-new-dired-buffer t) ;Only keep one dired open, keep buffers from getting cluttered.
-  (setq delete-by-moving-to-trash t)
-  (evil-collection-define-key 'normal 'dired-mode-map
-    "h" 'dired-up-directory
-    "l" 'dired-find-file))
-
+  (setq delete-by-moving-to-trash t))
 
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
@@ -479,3 +393,17 @@
   (exec-path-from-shell-initialize))
 
 (setq backup-directory-alist `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("4d5d11bfef87416d85673947e3ca3d3d5d985ad57b02a7bb2e32beaf785a100e"
+     default)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
