@@ -53,7 +53,7 @@
 
 (use-package doom-themes
  :config
- (load-theme 'doom-lantern t))
+ (load-theme 'doom-vibrant))
 (use-package jetbrains-darcula-theme)
   ;; :config
   ;; (load-theme 'jetbrains-darcula))
@@ -236,11 +236,9 @@
 
 (use-package clojure-mode
   :mode "\\.clj\\'"
-  :hook (clojure-mode . lsp-deferred))
-
-(use-package paredit
-  :after clojure-mode
-  :hook (clojure-mode . enable-paredit-mode))
+  :hook
+  (clojure-mode . lsp-deferred)
+  (clojure-mode . smartparens-mode))
 
 (use-package cider
   :after clojure-mode
@@ -306,7 +304,17 @@
   :config (projectile-mode)
   :custom((projectile-completion-system 'ivy))
   :init
-  (setq projectile-swtch-project-action #'projectile-dired)) 
+  (setq projectile-swtch-project-action #'projectile-dired)
+  :bind (("C-c p" . projectile-command-map) ; Binds C-c C-p to Projectile's main command map
+  ;; Now define the keys *within* projectile-command-map
+  :map projectile-command-map
+  ("f" . projectile-find-file)
+  ("b" . projectile-switch-to-buffer)
+  ("g" . projectile-grep)
+  ("k" . projectile-kill-buffers)
+  ("v" . projectile-find-file-dwim)
+  ("s" . projectile-save-project-buffers)
+  ("d" . projectile-find-dir))) 
 (use-package counsel-projectile
   :after projectile 
   :config (counsel-projectile-mode))
@@ -323,7 +331,8 @@
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
-
+(use-package smartparens
+  :init (setq sp-base-key-bindings 'paredit))
 
 (use-package term
    :commands term
