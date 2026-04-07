@@ -43,6 +43,9 @@
 
   (column-number-mode)
   (global-display-line-numbers-mode t)
+  (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)
+
 
   (dolist (mode '(org-mode-hook
                   term-mode-hook
@@ -61,9 +64,9 @@
 ** Font Configuration
 #+begin_src emacs-lisp
   (defvar tyler/default-font-size 120)
-  (set-face-attribute 'default nil :font "DejaVuSansMono" :height 108)
-  (set-face-attribute 'fixed-pitch nil :font "DejaVuSansMono" :height 108)
-  (set-face-attribute 'variable-pitch nil :font "DejaVuSans" :height 108 :weight 'regular)
+  (set-face-attribute 'default nil :font "AdwaitaMono" :height 100)
+  (set-face-attribute 'fixed-pitch nil :font "AdwaitaMono" :height 100)
+  (set-face-attribute 'variable-pitch nil :font "AdwaitaSans" :height 108 :weight 'regular)
 #+end_src
 
 * Keybinding Configuration
@@ -103,27 +106,28 @@
  
 ** Ivy and Counsel
 #+begin_src emacs-lisp
-  (use-package ivy
-    :diminish
-    :bind (("C-s" . swiper))
-    :config
-    (ivy-mode 1))
+    (use-package ivy
+      :diminish
+      :bind (("C-s" . swiper))
+      :config
+      (ivy-mode 1))
 
-  (use-package ivy-rich
-    :after ivy
-    :init
-    (ivy-rich-mode 1))
+    (use-package ivy-rich
+      :after ivy
+      :init
+      (ivy-rich-mode 1)
+  )
 
-  (use-package counsel
-    :config
-    (counsel-mode 1))
+    (use-package counsel
+      :config
+      (counsel-mode 1))
 
-  (use-package ivy-prescient
-    :after counsel
-    :custom
-    (ivy-prescient-enable-filtering nil)
-    :config
-    (ivy-prescient-mode 1))
+    (use-package ivy-prescient
+      :after counsel
+      :custom
+      (ivy-prescient-enable-filtering nil)
+      :config
+      (ivy-prescient-mode 1))
 #+end_src
 
 ** Helpful
@@ -197,7 +201,7 @@
     (setq org-agenda-start-with-log-mode t)
     (setq org-log-done 'time)
     (setq org-log-into-drawer t)
-    (setq org-format-latex-options (plist-put org-format-latex-options :scale 0.9))
+    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4))
     (setq org-agenda-files
           '("~/.emacs.d/OrgFiles/Tasks.org"))
     (efs/org-font-setup)
@@ -231,7 +235,10 @@
      'org-babel-load-languages
      '((emacs-lisp . t)
        (python . t)
-       (kotlin . t)))
+       (kotlin . t)
+       (clojure . t)
+       (C . t)
+       (haskell . t)))
 
     (setq org-confirm-babel-evaluate nil)
     (setq org-babel-python-command "python3")
@@ -242,7 +249,10 @@
       (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
       (add-to-list 'org-structure-template-alist '("py" . "src python"))
       (add-to-list 'org-structure-template-alist '("ko" . "src kotlin"))
-      (add-to-list 'org-structure-template-alist '("js" . "src javascript")))
+      (add-to-list 'org-structure-template-alist '("js" . "src javascript"))
+      (add-to-list 'org-structure-template-alist '("clj" . "src clojure"))
+      (add-to-list 'org-structure-template-alist '("cpp" . "src c++"))
+      (add-to-list 'org-structure-template-alist '("hs" . "src haskell")))
 
 #+end_src
 
@@ -271,6 +281,20 @@
   	 "%?")))
 #+end_src
 
+** Org-Roam
+#+begin_src emacs-lisp
+(use-package org-roam
+  :ensure t
+  :custom
+  (org-roam-directory "~/org/roam-notes/") ; Choose your Org-roam notes directory
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert))
+  :config
+  (org-roam-setup))
+
+#+end_src
+
 * Development
 ** Comenting
 #+begin_src emacs-lisp
@@ -293,9 +317,9 @@
     (lsp-enable-which-key-integration t)
     (setq lsp-semantic-tokens-enable t))
 
-  ;; (use-package flycheck
-  ;;   :after lsp-mode 
-  ;;   :init ())
+  (use-package flycheck
+    :after lsp-mode
+    :init ())
 
   (use-package lsp-ui
     :hook (lsp-mode . lsp-ui-mode)
@@ -320,32 +344,32 @@
   (use-package cider
     :after clojure-mode
     :commands cider-jack-in)
+
+  (add-hook 'cider-mode-hook
+          (lambda ()
+            (setq-local completion-at-point-functions
+                        (delete 'cider-complete-at-point completion-at-point-functions))))
+
 #+end_src
 
 *** Latex
 #+begin_src emacs-lisp
   (use-package tex
     :hook
-    (LaTeX-mode . lsp-deferred)
-    (LaTeX-mode . xenops-mode)
+    (LaTeX-mode . eglot-ensure)
     :ensure auctex)
-  (use-package lsp-latex
-    :after tex
-    :init
-    (setq lsp-latex-chktex-on-edit t))
 
-  (use-package xenops
-    :after tex
-    :init (setq xenops-reveal-on-entry t))
+
 #+end_src
 
 *** Haskell
 #+begin_src emacs-lisp
-      (use-package lsp-haskell
-        :after haskell-mode)
-      (use-package haskell-mode
-        :mode "\\.hs\\'"
-        :hook (haskell-mode . lsp-deferred))
+  (let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
+    (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
+    (add-to-list 'exec-path my-ghcup-path))
+
+   (use-package haskell-mode
+     :hook (haskell-mode . eglot-ensure))
 #+end_src
 *** Python
 #+begin_src emacs-lisp
@@ -374,6 +398,43 @@
     :hook (js-mode . lsp-deferred)
     (js-mode . smartparens-mode))
 #+end_src
+*** R
+#+begin_src emacs-lisp
+(use-package ess
+  :hook (ess-r-mode . (lambda () (setq-local ess-indent-offset 2))))
+#+end_src
+*** C/C++
+#+begin_src emacs-lisp
+  (use-package cc-mode
+    ;; :hook (c-mode-common . lsp-deferred)
+    :init
+    (setq-default c-basic-offset 4)
+    (setq-default tab-width 4)
+    (setq-default indent-tabs-mode nil)
+    (c-set-offset 'arglist-intro '+)
+  )
+  ;; (add-hook 'c-mode-common-hook
+  ;;           (lambda ()
+  ;;             ;; Set indent to 4 spaces and use spaces over tabs
+  ;; 	    (lsp-deferred)
+  ;;             (setq-default c-basic-offset 4)
+  ;;             (setq-default tab-width 4)
+  ;;             (setq-default indent-tabs-mode nil)
+  	    
+  ;;             ;; Set off-set-alist to indent function arguments
+  ;;             (c-set-offset 'arglist-intro '+)))
+#+end_src
+*** Godot
+#+begin_src emacs-lisp
+ ( use-package csharp-mode
+  :ensure t
+  :hook (csharp-mode . eglot-ensure)
+  :config
+  ;; Prevent lsp-mode from taking over C# buffers
+  (with-eval-after-load 'lsp-mode
+    (add-to-list 'lsp-disabled-clients 'omnisharp)
+    (add-to-list 'lsp-disabled-clients 'csharp-ls)))
+#+end_src
 ** Company Mode
 #+begin_src emacs-lisp
   (use-package company
@@ -383,8 +444,8 @@
     :hook (lsp-mode . company-mode)
     
     :custom
-    (company-minimum-prefix-length 3)
-    (company-idle-delay 0.25))
+    (company-minimum-prefix-length 0)
+    (company-idle-delay 0.0))
 
   (use-package company-box
     :hook (company-mode . company-box-mode))
@@ -520,11 +581,13 @@
 
 * Environment Variables
 #+begin_src emacs-lisp
-(use-package exec-path-from-shell
-  :ensure t
-  :config
-  (setq exec-path-from-shell-variables '("OPENAI_API_KEY"))
-  (exec-path-from-shell-initialize))
+  (use-package exec-path-from-shell
+    :ensure t
+    :config
+    (setq exec-path-from-shell-variables '("OPENAI_API_KEY"))
+    (setq exec-path-from-shell-variables '("PATH" "MANPATH"))
+    (exec-path-from-shell-initialize))
+
 #+end_src
 
 * ETC

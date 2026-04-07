@@ -30,6 +30,9 @@
 
 (column-number-mode)
 (global-display-line-numbers-mode t)
+(set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+(set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)
+
 
 (dolist (mode '(org-mode-hook
                 term-mode-hook
@@ -45,9 +48,9 @@
   (good-scroll-mode 1))
 
 (defvar tyler/default-font-size 120)
-(set-face-attribute 'default nil :font "DejaVuSansMono" :height 108)
-(set-face-attribute 'fixed-pitch nil :font "DejaVuSansMono" :height 108)
-(set-face-attribute 'variable-pitch nil :font "DejaVuSans" :height 108 :weight 'regular)
+(set-face-attribute 'default nil :font "AdwaitaMono" :height 100)
+(set-face-attribute 'fixed-pitch nil :font "AdwaitaMono" :height 100)
+(set-face-attribute 'variable-pitch nil :font "AdwaitaSans" :height 108 :weight 'regular)
 
 
 
@@ -72,26 +75,27 @@
   (setq which-key-idle-delay 1))
 
 (use-package ivy
-  :diminish
-  :bind (("C-s" . swiper))
-  :config
-  (ivy-mode 1))
+    :diminish
+    :bind (("C-s" . swiper))
+    :config
+    (ivy-mode 1))
 
-(use-package ivy-rich
-  :after ivy
-  :init
-  (ivy-rich-mode 1))
+  (use-package ivy-rich
+    :after ivy
+    :init
+    (ivy-rich-mode 1)
+)
 
-(use-package counsel
-  :config
-  (counsel-mode 1))
+  (use-package counsel
+    :config
+    (counsel-mode 1))
 
-(use-package ivy-prescient
-  :after counsel
-  :custom
-  (ivy-prescient-enable-filtering nil)
-  :config
-  (ivy-prescient-mode 1))
+  (use-package ivy-prescient
+    :after counsel
+    :custom
+    (ivy-prescient-enable-filtering nil)
+    :config
+    (ivy-prescient-mode 1))
 
 (use-package helpful
   :commands (helpful-callable helpful-variable helpful-command helpful-key)
@@ -151,7 +155,7 @@
   (setq org-agenda-start-with-log-mode t)
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 0.9))
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4))
   (setq org-agenda-files
         '("~/.emacs.d/OrgFiles/Tasks.org"))
   (efs/org-font-setup)
@@ -176,7 +180,10 @@
  'org-babel-load-languages
  '((emacs-lisp . t)
    (python . t)
-   (kotlin . t)))
+   (kotlin . t)
+   (clojure . t)
+   (C . t)
+   (haskell . t)))
 
 (setq org-confirm-babel-evaluate nil)
 (setq org-babel-python-command "python3")
@@ -187,7 +194,10 @@
   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
   (add-to-list 'org-structure-template-alist '("py" . "src python"))
   (add-to-list 'org-structure-template-alist '("ko" . "src kotlin"))
-  (add-to-list 'org-structure-template-alist '("js" . "src javascript")))
+  (add-to-list 'org-structure-template-alist '("js" . "src javascript"))
+  (add-to-list 'org-structure-template-alist '("clj" . "src clojure"))
+  (add-to-list 'org-structure-template-alist '("cpp" . "src c++"))
+  (add-to-list 'org-structure-template-alist '("hs" . "src haskell")))
 
 (defun efs/org-babel-tangle-config()
   (when (string-equal (buffer-file-name)
@@ -203,6 +213,16 @@
 (setq org-capture-templates
       '(("j" "Journal" plain (file+datetree "~/journal.org")
 	 "%?")))
+
+(use-package org-roam
+  :ensure t
+  :custom
+  (org-roam-directory "~/org/roam-notes/") ; Choose your Org-roam notes directory
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert))
+  :config
+  (org-roam-setup))
 
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
@@ -220,9 +240,9 @@
   (lsp-enable-which-key-integration t)
   (setq lsp-semantic-tokens-enable t))
 
-;; (use-package flycheck
-;;   :after lsp-mode 
-;;   :init ())
+(use-package flycheck
+  :after lsp-mode
+  :init ())
 
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
@@ -244,25 +264,22 @@
   :after clojure-mode
   :commands cider-jack-in)
 
+(add-hook 'cider-mode-hook
+        (lambda ()
+          (setq-local completion-at-point-functions
+                      (delete 'cider-complete-at-point completion-at-point-functions))))
+
 (use-package tex
   :hook
-  (LaTeX-mode . lsp-deferred)
-  (LaTeX-mode . xenops-mode)
+  (LaTeX-mode . eglot-ensure)
   :ensure auctex)
-(use-package lsp-latex
-  :after tex
-  :init
-  (setq lsp-latex-chktex-on-edit t))
 
-(use-package xenops
-  :after tex
-  :init (setq xenops-reveal-on-entry t))
+(let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
+  (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
+  (add-to-list 'exec-path my-ghcup-path))
 
-(use-package lsp-haskell
-  :after haskell-mode)
-(use-package haskell-mode
-  :mode "\\.hs\\'"
-  :hook (haskell-mode . lsp-deferred))
+ (use-package haskell-mode
+   :hook (haskell-mode . eglot-ensure))
 
 (use-package python-mode
   :ensure t
@@ -286,6 +303,37 @@
   :hook (js-mode . lsp-deferred)
   (js-mode . smartparens-mode))
 
+(use-package ess
+  :hook (ess-r-mode . (lambda () (setq-local ess-indent-offset 2))))
+
+(use-package cc-mode
+  ;; :hook (c-mode-common . lsp-deferred)
+  :init
+  (setq-default c-basic-offset 4)
+  (setq-default tab-width 4)
+  (setq-default indent-tabs-mode nil)
+  (c-set-offset 'arglist-intro '+)
+)
+;; (add-hook 'c-mode-common-hook
+;;           (lambda ()
+;;             ;; Set indent to 4 spaces and use spaces over tabs
+;; 	    (lsp-deferred)
+;;             (setq-default c-basic-offset 4)
+;;             (setq-default tab-width 4)
+;;             (setq-default indent-tabs-mode nil)
+	    
+;;             ;; Set off-set-alist to indent function arguments
+;;             (c-set-offset 'arglist-intro '+)))
+
+( use-package csharp-mode
+ :ensure t
+ :hook (csharp-mode . eglot-ensure)
+ :config
+ ;; Prevent lsp-mode from taking over C# buffers
+ (with-eval-after-load 'lsp-mode
+   (add-to-list 'lsp-disabled-clients 'omnisharp)
+   (add-to-list 'lsp-disabled-clients 'csharp-ls)))
+
 (use-package company
   ;; :config (add-to-list 'company-backends 'company-yasnippet)
   ;; :after lsp-mode
@@ -293,8 +341,8 @@
   :hook (lsp-mode . company-mode)
   
   :custom
-  (company-minimum-prefix-length 3)
-  (company-idle-delay 0.25))
+  (company-minimum-prefix-length 0)
+  (company-idle-delay 0.0))
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
@@ -399,6 +447,7 @@
   :ensure t
   :config
   (setq exec-path-from-shell-variables '("OPENAI_API_KEY"))
+  (setq exec-path-from-shell-variables '("PATH" "MANPATH"))
   (exec-path-from-shell-initialize))
 
 (setq backup-directory-alist `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
@@ -409,7 +458,26 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("4d5d11bfef87416d85673947e3ca3d3d5d985ad57b02a7bb2e32beaf785a100e"
-     default)))
+     default))
+ '(package-selected-packages
+   '(all-the-icons-dired all-the-icons-nerd-fonts ccls cider company-box
+                         counsel-projectile dap-mode
+                         dired-hide-dotfiles dired-open doom-modeline
+                         doom-themes eshell-git-prompt ess
+                         eterm-256color evil-collection
+                         evil-nerd-commenter exec-path-from-shell
+                         flymake-flycheck general good-scroll
+                         graphviz-dot-mode haskell-mode helpful
+                         highlight-indentation ivy-prescient ivy-rich
+                         jetbrains-darcula-theme kotlin-mode
+                         lsp-haskell lsp-ivy lsp-latex lsp-pyright
+                         lsp-ui magit multi-vterm ob-kotlin
+                         org-bullets org-fragtog org-noter org-roam-ui
+                         paredit preview-auto python-mode pythonic
+                         pyvenv rainbow-delimiters smartparens
+                         typescript-mode unobtrusive-magit-theme
+                         visual-fill-column wallpaper web-mode
+                         which-key xenops yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
