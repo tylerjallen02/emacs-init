@@ -74,38 +74,35 @@
   :config
   (setq which-key-idle-delay 1))
 
-(use-package ivy
-    :diminish
-    :bind (("C-s" . swiper))
-    :config
-    (ivy-mode 1))
+(use-package vertico
+  :init
+  (vertico-mode))
 
-  (use-package ivy-rich
-    :after ivy
-    :init
-    (ivy-rich-mode 1)
-)
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion)))))
 
-  (use-package counsel
-    :config
-    (counsel-mode 1))
+(use-package marginalia
+  :ensure t
+  :init
+  (marginalia-mode))
 
-  (use-package ivy-prescient
-    :after counsel
-    :custom
-    (ivy-prescient-enable-filtering nil)
-    :config
-    (ivy-prescient-mode 1))
+(use-package consult
+  :bind (("C-s" . consult-line)
+         ("C-x b" . consult-buffer)))
+
+(use-package savehist
+  :init
+  (savehist-mode 1))
 
 (use-package helpful
   :commands (helpful-callable helpful-variable helpful-command helpful-key)
-  :custom
-  (counsel-describe-function-function #'helpful-callable)
-  (counsel-describe-variable-function #'helpful-variable)
   :bind
-  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-function] . helpful-callable)
   ([remap describe-command] . helpful-command)
-  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-variable] . helpful-variable)
   ([remap describe-key] . helpful-key))
 
 
@@ -251,7 +248,7 @@
 (use-package lsp-treemacs
   :after lsp)
 
-(use-package lsp-ivy
+(use-package consult-lsp
   :after lsp)
 
 (use-package clojure-mode
@@ -350,22 +347,7 @@
 (use-package projectile
   :diminish projectile-mode
   :config (projectile-mode)
-  :custom((projectile-completion-system 'ivy))
-  :init
-  (setq projectile-swtch-project-action #'projectile-dired)
-  :bind (("C-c p" . projectile-command-map) ; Binds C-c C-p to Projectile's main command map
-  ;; Now define the keys *within* projectile-command-map
-  :map projectile-command-map
-  ("f" . projectile-find-file)
-  ("b" . projectile-switch-to-buffer)
-  ("g" . projectile-grep)
-  ("k" . projectile-kill-buffers)
-  ("v" . projectile-find-file-dwim)
-  ("s" . projectile-save-project-buffers)
-  ("d" . projectile-find-dir))) 
-(use-package counsel-projectile
-  :after projectile 
-  :config (counsel-projectile-mode))
+  :custom((projectile-completion-system 'default)))
 
 (use-package magit
   :commands magit-status
@@ -458,26 +440,7 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("4d5d11bfef87416d85673947e3ca3d3d5d985ad57b02a7bb2e32beaf785a100e"
-     default))
- '(package-selected-packages
-   '(all-the-icons-dired all-the-icons-nerd-fonts ccls cider company-box
-                         counsel-projectile dap-mode
-                         dired-hide-dotfiles dired-open doom-modeline
-                         doom-themes eshell-git-prompt ess
-                         eterm-256color evil-collection
-                         evil-nerd-commenter exec-path-from-shell
-                         flymake-flycheck general good-scroll
-                         graphviz-dot-mode haskell-mode helpful
-                         highlight-indentation ivy-prescient ivy-rich
-                         jetbrains-darcula-theme kotlin-mode
-                         lsp-haskell lsp-ivy lsp-latex lsp-pyright
-                         lsp-ui magit multi-vterm ob-kotlin
-                         org-bullets org-fragtog org-noter org-roam-ui
-                         paredit preview-auto python-mode pythonic
-                         pyvenv rainbow-delimiters smartparens
-                         typescript-mode unobtrusive-magit-theme
-                         visual-fill-column wallpaper web-mode
-                         which-key xenops yasnippet-snippets)))
+     default)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
