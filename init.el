@@ -331,18 +331,28 @@
    (add-to-list 'lsp-disabled-clients 'omnisharp)
    (add-to-list 'lsp-disabled-clients 'csharp-ls)))
 
-(use-package company
-  ;; :config (add-to-list 'company-backends 'company-yasnippet)
-  ;; :after lsp-mode
-  :config (yas-global-mode 1)
-  :hook (lsp-mode . company-mode)
-  
+(use-package corfu
   :custom
-  (company-minimum-prefix-length 0)
-  (company-idle-delay 0.0))
+  (corfu-auto t)
+  (corfu-cycle t)
+  (corfu-quit-no-match 'separator)
+  (corfu-auto-delay 0.1)
+  (corfu-auto-prefix 1))
 
-(use-package company-box
-  :hook (company-mode . company-box-mode))
+(use-package kind-icon
+  :ensure t
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default)
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+(use-package cape
+  :ensure t
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block))
 
 (use-package projectile
   :diminish projectile-mode
@@ -440,7 +450,27 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("4d5d11bfef87416d85673947e3ca3d3d5d985ad57b02a7bb2e32beaf785a100e"
-     default)))
+     default))
+ '(package-selected-packages
+   '(all-the-icons-dired all-the-icons-nerd-fonts cape ccls cider
+                         consult-lsp corfu counsel-projectile dap-mode
+                         dired-hide-dotfiles dired-open doom-modeline
+                         doom-themes eshell-git-prompt ess
+                         eterm-256color evil-collection
+                         evil-nerd-commenter exec-path-from-shell
+                         flymake-flycheck general good-scroll
+                         graphviz-dot-mode haskell-mode helpful
+                         highlight-indentation ivy-prescient ivy-rich
+                         jetbrains-darcula-theme kind-icon kotlin-mode
+                         lsp-haskell lsp-ivy lsp-latex lsp-pyright
+                         lsp-ui magit marginalia multi-vterm ob-kotlin
+                         orderless org-bullets org-fragtog org-noter
+                         org-roam-ui pandoc-mode paredit preview-auto
+                         python-mode pythonic pyvenv
+                         rainbow-delimiters smartparens
+                         typescript-mode unobtrusive-magit-theme
+                         vertico visual-fill-column wallpaper web-mode
+                         which-key xenops yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

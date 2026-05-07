@@ -435,19 +435,28 @@ See [[id:1231a8d2-5b6c-4dc4-b076-ffd6022656a7][Interactive completion stack emac
 #+end_src
 ** Company Mode
 #+begin_src emacs-lisp
-  (use-package company
-    ;; :config (add-to-list 'company-backends 'company-yasnippet)
-    ;; :after lsp-mode
-    :config (yas-global-mode 1)
-    :hook (lsp-mode . company-mode)
-    
+  (use-package corfu
     :custom
-    (company-minimum-prefix-length 0)
-    (company-idle-delay 0.0))
+    (corfu-auto t)
+    (corfu-cycle t)
+    (corfu-quit-no-match 'separator)
+    (corfu-auto-delay 0.1)
+    (corfu-auto-prefix 1))
 
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
+  (use-package kind-icon
+    :ensure t
+    :after corfu
+    :custom
+    (kind-icon-default-face 'corfu-default)
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
+  (use-package cape
+    :ensure t
+    :init
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file)
+    (add-to-list 'completion-at-point-functions #'cape-elisp-block))
 #+end_src
  
 ** Projectile
