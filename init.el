@@ -221,6 +221,19 @@
   :config
   (org-roam-setup))
 
+;; (defun tyler/lsp-dev-setup ()
+;;   (smartparens-mode 1)
+;;   (corfu-mode 1)
+;;   (eglot-ensure))
+
+;; (add-hook 'prog-mode-hook #'tyler/lsp-dev-setup)
+(defun tyler/dev-setup ()
+  (electric-pair-mode 1)
+  (corfu-mode 1)
+  (eglot-ensure))
+
+(add-hook 'prog-mode-hook #'tyler/dev-setup)
+
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
@@ -271,12 +284,15 @@
   (LaTeX-mode . eglot-ensure)
   :ensure auctex)
 
-(let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
-  (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
-  (add-to-list 'exec-path my-ghcup-path))
-
- (use-package haskell-mode
-   :hook (haskell-mode . eglot-ensure))
+;; (let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
+;;   (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
+;;   (add-to-list 'exec-path my-ghcup-path))
+(use-package haskell-mode
+  :hook (haskell-mode . interactive-haskell-mode)
+  :config
+  (let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
+    (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
+    (add-to-list 'exec-path my-ghcup-path)))
 
 (use-package python-mode
   :ensure t
@@ -450,27 +466,7 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("4d5d11bfef87416d85673947e3ca3d3d5d985ad57b02a7bb2e32beaf785a100e"
-     default))
- '(package-selected-packages
-   '(all-the-icons-dired all-the-icons-nerd-fonts cape ccls cider
-                         consult-lsp corfu counsel-projectile dap-mode
-                         dired-hide-dotfiles dired-open doom-modeline
-                         doom-themes eshell-git-prompt ess
-                         eterm-256color evil-collection
-                         evil-nerd-commenter exec-path-from-shell
-                         flymake-flycheck general good-scroll
-                         graphviz-dot-mode haskell-mode helpful
-                         highlight-indentation ivy-prescient ivy-rich
-                         jetbrains-darcula-theme kind-icon kotlin-mode
-                         lsp-haskell lsp-ivy lsp-latex lsp-pyright
-                         lsp-ui magit marginalia multi-vterm ob-kotlin
-                         orderless org-bullets org-fragtog org-noter
-                         org-roam-ui pandoc-mode paredit preview-auto
-                         python-mode pythonic pyvenv
-                         rainbow-delimiters smartparens
-                         typescript-mode unobtrusive-magit-theme
-                         vertico visual-fill-column wallpaper web-mode
-                         which-key xenops yasnippet-snippets)))
+     default)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

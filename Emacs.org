@@ -294,6 +294,20 @@ See [[id:1231a8d2-5b6c-4dc4-b076-ffd6022656a7][Interactive completion stack emac
 #+end_src
 
 * Development
+#+begin_src emacs-lisp
+  ;; (defun tyler/lsp-dev-setup ()
+  ;;   (smartparens-mode 1)
+  ;;   (corfu-mode 1)
+  ;;   (eglot-ensure))
+
+  ;; (add-hook 'prog-mode-hook #'tyler/lsp-dev-setup)
+  (defun tyler/dev-setup ()
+    (electric-pair-mode 1)
+    (corfu-mode 1)
+    (eglot-ensure))
+
+  (add-hook 'prog-mode-hook #'tyler/dev-setup)
+#+end_src
 ** Comenting
 #+begin_src emacs-lisp
   (use-package evil-nerd-commenter
@@ -362,12 +376,15 @@ See [[id:1231a8d2-5b6c-4dc4-b076-ffd6022656a7][Interactive completion stack emac
 
 *** Haskell
 #+begin_src emacs-lisp
-  (let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
-    (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
-    (add-to-list 'exec-path my-ghcup-path))
-
-   (use-package haskell-mode
-     :hook (haskell-mode . eglot-ensure))
+  ;; (let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
+  ;;   (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
+  ;;   (add-to-list 'exec-path my-ghcup-path))
+  (use-package haskell-mode
+    :hook (haskell-mode . interactive-haskell-mode)
+    :config
+    (let ((my-ghcup-path (expand-file-name "~/.ghcup/bin")))
+      (setenv "PATH" (concat my-ghcup-path ":" (getenv "PATH")))
+      (add-to-list 'exec-path my-ghcup-path)))
 #+end_src
 *** Python
 #+begin_src emacs-lisp
